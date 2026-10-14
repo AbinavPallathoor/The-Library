@@ -1,0 +1,32 @@
+.theme-dark {
+  --background-primary: #233633;
+  --background-primary-alt: #1d302d;
+  --background-secondary: #182725;
+  --background-secondary-alt: #1d302d;
+  --background-modifier-border: #3c514c;
+  --background-modifier-hover: #30483f;
+  --text-normal: #e7e2d7;
+  --text-muted: #aabbb2;
+  --text-faint: #8fa399;
+  --text-accent: #9ccebb;
+  --text-accent-hover: #c0e5cf;
+  --interactive-accent: #6f9b83;
+  --interactive-accent-hover: #8ab59b;
+  --h1-color: #e7e2d7;
+  --h2-color: #cfbde5;
+  --h3-color: #cfbde5;
+  --link-color: #9ccebb;
+  --font-text-theme: "Clear Lora";
+  --font-text-size: 17px;
+  --line-height-normal: 1.8;
+  --h1-font: "Clear Lora";
+  --h2-font: "Clear Lora";
+  --h3-font: "Clear Lora";
+  --h1-weight: 400;
+  --h2-weight: 400;
+  --h3-weight: 400;
+  --code-background: #182b26;
+  --blockquote-border-color: #9ccebb;
+  --tag-color: #cfbde5;
+  --tag-background: #39433f;
+}
