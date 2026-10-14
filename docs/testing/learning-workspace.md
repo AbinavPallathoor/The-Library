@@ -1,3 +1,18 @@
+# Navigation and reading polish — 2026-10-14
+
+Removed the Library view header, brand bar, Edit/Edit index controls, outline and related-note section. Added hub-based notebook breadcrumbs, grouped explorer folder styling, and notebook-scoped graph focus with restoration. Notes remain unchanged.
+
+- 32 unit/integration tests and four release tests pass, plus TypeScript, production build and packaging.
+- Regenerated shelf, index and reader screenshots at 1280, 800, 412 and 360px. No browser errors or document overflow. Screenshots use demonstration notes only.
+- Native Obsidian screenshot confirms the duplicate header is gone and macOS controls remain clear. Further native clicks failed with `noWindowsAvailable`; graph centering and final explorer styles remain visually unverified in the live app.
+- Graph API integration is based on static inspection of installed Obsidian 1.14.4, with feature guards and restoration tests. Existing global graph panes are filtered to notebook notes and direct inbound/outbound links. No pane is created automatically. Future core changes may require an adapter update.
+- Breadcrumbs use `hub`-tagged notes; ordinary backlinks are not inferred as parents. Cycles terminate safely; ties use deterministic path order.
+- Physical Android remains unverified.
+
+Earlier verification records follow as history.
+
+---
+
 # Current interface update
 
 Recall/Practice, Pin, and New notebook controls have been removed. The companion now exposes six note-management tools; legacy saved data is retained. Library opens on startup in Obsidian’s ordinary workspace, with native title bar, tabs and sidebars visible. A matching dark palette applies while the plugin is enabled.

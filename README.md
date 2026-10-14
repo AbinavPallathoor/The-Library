@@ -9,8 +9,12 @@ A quiet home for your notes in **Obsidian**. Illustrated notebooks, soft blue ac
 ### Open. Browse. Read.
 
 - **Notebooks** — existing folders become browsable collections. An optional `Index.md` groups notes with headings and wikilinks.
-- **Focused reading** — follow connections and resume your reading position. Press **Edit** to change a note, then **Save** or **Cancel**.
+- **Focused reading** — follow connections and resume your reading position. Read without editing controls, extra outlines, or related-note panels.
+- **Clear navigation** — ordered notebook → topic → note breadcrumbs, with distinct folder sections in Obsidian’s explorer.
+- **Notebook graph** — existing graph panes focus on the notebook and its direct connections, then restore when you return to the shelf.
 - **One visual style** — a matching dark palette across the Library, Obsidian tabs, sidebars, search, and dialogs.
+
+Breadcrumb topics come from notes tagged `hub` and their links. Graph focusing uses guarded Obsidian core APIs; native centering verification is still pending.
 
 The Library opens on startup. Notes stay in their existing folders; cross-notebook links open the original file. Add or organize notebooks through Obsidian or your LLM’s file tools.
 

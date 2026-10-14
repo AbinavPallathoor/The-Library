@@ -37,56 +37,28 @@ const setup = () => {
   ui.mount();
   return { root, state, index, save, ui };
 };
-it("starts read-only and saves only through explicit Edit then Save", async () => {
-  const { root, ui, save } = setup();
-  await ui.openNote("Learning.md");
-  expect(root.querySelector("textarea")).toBeNull();
-  const button = (text: string) =>
-    [...root.querySelectorAll("button")].find((b) => b.textContent === text)!;
-  button("Edit").click();
-  expect(root.querySelector("textarea")).not.toBeNull();
-  const input = root.querySelector("textarea")!;
-  input.value = "Changed";
-  input.dispatchEvent(new Event("input"));
-  expect(save).not.toHaveBeenCalled();
-  button("Save").click();
-  await tick();
-  expect(save).toHaveBeenCalledWith(
-    "Learning.md",
-    expect.any(String),
-    "Changed",
-  );
-  expect(root.querySelector("textarea")).toBeNull();
-  ui.destroy();
+it("keeps reading free of editing, outlines, related sections and the brand header", async () => {
+ const { root, ui, save } = setup();
+ expect(root.querySelector('.library-topbar')).toBeNull();
+ await ui.openNote('Learning.md');
+ expect(root.querySelector('textarea,.clear-outline,.clear-related')).toBeNull();
+ expect([...root.querySelectorAll('button')].map(b => b.textContent)).not.toContain('Edit');
+ root.querySelector('.clear-markdown')!.dispatchEvent(new MouseEvent('dblclick', {bubbles:true}));
+ expect(save).not.toHaveBeenCalled();
+ ui.destroy();
 });
-it("cancel discards edits and navigation cannot discard a draft silently", async () => {
-  const { root, ui, save } = setup();
-  await ui.openNote("Learning.md");
-  [...root.querySelectorAll("button")]
-    .find((b) => b.textContent === "Edit")!
-    .click();
-  await ui.openNote("Missing.md");
-  expect(root.querySelector("textarea")).not.toBeNull();
-  [...root.querySelectorAll("button")]
-    .find((b) => b.textContent === "Cancel")!
-    .click();
-  expect(save).not.toHaveBeenCalled();
-  ui.destroy();
-});
-it("retains editor content after a conflict", async () => {
-  const { root, ui, save } = setup();
-  save.mockResolvedValue(false);
-  await ui.openNote("Learning.md");
-  [...root.querySelectorAll("button")]
-    .find((b) => b.textContent === "Edit")!
-    .click();
-  root.querySelector("textarea")!.value = "My draft";
-  [...root.querySelectorAll("button")]
-    .find((b) => b.textContent === "Save")!
-    .click();
-  await tick();
-  expect(root.querySelector("textarea")!.value).toBe("My draft");
-  ui.destroy();
+it("shows clickable notebook and topic ancestors in order", async () => {
+ const {root,ui,index} = setup();
+ index.upsert('Learnings/Cisco Networking.md','---\ntags: [hub]\n---\n[[TCP]]');
+ index.upsert('Learnings/TCP.md','Reliable delivery');
+ await ui.openNote('Learnings/TCP.md');
+ const nav = root.querySelector('nav')!;
+ expect(nav.textContent).toBe('Learnings›Cisco Networking›TCP');
+ expect(nav.querySelector('[aria-current="page"]')?.textContent).toBe('TCP');
+ (nav.querySelectorAll('button')[1] as HTMLButtonElement).click();
+ await tick();
+ expect(root.querySelector('h1')?.textContent).toBe('Cisco Networking');
+ ui.destroy();
 });
 it("has mobile layout boundaries and hides answers until reveal", () => {
   expect([480, 800, 1280].map(layoutMode)).toEqual([
@@ -144,7 +116,7 @@ it('launches into a notebook shelf without capture or sidebars, then opens its i
  expect(root.querySelector('textarea')).toBeNull();
  ui.destroy();
 });
-it('exposes only navigation and editing, without notebook creation or study actions', async () => {
+it('exposes only navigation, without notebook creation or study actions', async () => {
  const {root,ui} = setup();
  const names = () => [...root.querySelectorAll('button')].map(b => b.textContent);
  expect(names()).not.toContain('New notebook');
@@ -152,6 +124,6 @@ it('exposes only navigation and editing, without notebook creation or study acti
  await ui.openNote('Learning.md');
  expect(names()).not.toContain('Recall');
  expect(names()).not.toContain('Pin');
- expect(names()).toContain('Edit');
+ expect(names()).not.toContain('Edit');
  ui.destroy();
 });

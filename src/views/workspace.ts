@@ -1,16 +1,16 @@
 import type {
   ClearState,
-  NoteRecord,
   Receipt,
   CaptureDraft,
 } from "../domain/types";
 import { VaultIndex } from "../index/vault-index";
 import { parseNoteStyle, layoutMode } from "../domain/core";
+import { topicTrail } from "../notebooks/breadcrumbs";
 import { cover } from "./cover";
 import { notebooks, type Notebook } from "../notebooks/model";
 import { el, button } from "./dom";
 export interface WorkspaceHost {
-  exit?: () => void;
+  focusNotebook?: (book?: Notebook, path?: string) => void;
   state: ClearState;
   index: VaultIndex;
   persist: () => Promise<void>;
@@ -36,19 +36,14 @@ export class Workspace {
   private displayedRevision?: string;
   private page: Page = "Home";
   private current?: string;
-  private editing = false;
-  private saving = false;
   private bookId?: string;
-  private list!: HTMLElement;
   private main!: HTMLElement;
-  private nav!: HTMLElement;
   private history: string[] = [];
   private historyIndex = -1;
   private cleanup?: () => void;
   private renderId = 0;
   private resize?: ResizeObserver;
   private scrollTimer?: ReturnType<typeof setTimeout>;
-  private cards = false;
   private queryTimer?: ReturnType<typeof setTimeout>;
   private destroyed = false;
   constructor(
@@ -62,13 +57,6 @@ export class Workspace {
       "--clear-reading-font",
       this.host.state.settings.readingFont || "Clear Lora",
     );
-    this.nav = el("header", "library-topbar", undefined, this.root);
-    const brand = button(this.nav, "The Library", () => this.navigate("Library"), "library-wordmark");
-    const mark = el("span", "library-logo", "", brand); mark.setAttribute("aria-hidden", "true");
-    const actions = el("div", "library-top-actions", undefined, this.nav);
-    if (this.host.exit) button(actions, "Return to Obsidian", this.host.exit, "clear-text-button");
-    this.list = el("div", "library-unused", undefined, this.root);
-    this.list.hidden = true;
     this.main = el("main", "clear-main", undefined, this.root);
     this.resize =
       typeof ResizeObserver === "undefined"
@@ -92,20 +80,13 @@ export class Workspace {
         ),
       );
   }
-  private allowNavigation() {
-    if (this.editing) {
-      this.host.notice("Save or cancel your edit before leaving this note.");
-      return false;
-    }
-    return true;
-  }
   navigate(page: Page) {
-    if (!this.allowNavigation()) return;
     this.page = page;
     this.current = undefined;
     this.bookId = undefined;
     this.root.dataset.screen = "list";
     this.root.dataset.page = page;
+    this.host.focusNotebook?.();
     this.shelf();
   }
   refresh() {
@@ -114,7 +95,7 @@ export class Workspace {
       "--clear-reading-font",
       this.host.state.settings.readingFont || "Clear Lora",
     );
-    if (!this.editing) {
+    {
       if (this.current) {
         const note = this.host.index.notes.get(this.current);
         if (!note) {
@@ -176,7 +157,7 @@ export class Workspace {
     search.oninput = draw; draw();
   }
   private openBook(book: Notebook) {
-    if (!this.allowNavigation()) return;
+    this.host.focusNotebook?.(book);
     this.bookId = book.id; this.current = undefined; this.page = "Library";
     this.clearReader(); this.root.dataset.screen = "list";
     const wrap = el("section", "library-index", undefined, this.main);
@@ -191,7 +172,6 @@ export class Workspace {
     if (book.index) {
       const actions = el("div", "library-top-actions", undefined, heading);
       button(actions, "Read index", () => this.openNote(book.index!.path), "clear-text-button");
-      button(actions, "Edit index", () => this.edit(book.index!), "clear-text-button");
     }
     const row = (title: string, path?: string) => {
       const b = button(wrap, "", () => path && this.openNote(path), "library-index-row");
@@ -213,7 +193,6 @@ export class Workspace {
     if (!book.sections.length && !book.additional.length) el("p", "clear-muted", "Add Markdown notes to this notebook’s folder, or ask your LLM to organize what you learned here.", wrap);
   }
   async openNote(path: string, push = true, anchor?: string) {
-    if (!this.allowNavigation()) return;
     const n = this.host.index.notes.get(path);
     if (!n) {
       this.host.notice(
@@ -234,58 +213,36 @@ export class Workspace {
     this.clearReader();
     const generation = this.renderId;
     const toolbar = el("div", "clear-reader-toolbar", undefined, this.main);
-    const navigation = el("div", "library-reader-navigation", undefined, toolbar);
-    button(
-      navigation,
-      "Library",
-      () => this.navigate("Library"),
-      "clear-mobile-back",
-    );
-    const book = notebooks(this.host.index).find(b => b.id === this.bookId) ?? notebooks(this.host.index).filter(b => path.startsWith(b.folder + "/")).sort((a,b) => b.folder.length-a.folder.length)[0];
-    if (book) button(navigation, book.title, () => this.openBook(book), "clear-text-button");
-    const back = button(
-      navigation,
-      "←",
-      () => this.travel(-1),
-      "clear-icon-button",
-    );
-    back.setAttribute("aria-label", "Previous note");
-    back.disabled = this.historyIndex <= 0;
-    const forward = button(
-      navigation,
-      "→",
-      () => this.travel(1),
-      "clear-icon-button",
-    );
-    forward.setAttribute("aria-label", "Next note");
-    forward.disabled = this.historyIndex >= this.history.length - 1;
-    const actions = el("div", "library-reader-actions", undefined, toolbar);
-    button(actions, "Edit", () => this.edit(n), "clear-primary");
+    const home = button(toolbar, "Library", () => this.navigate("Library"), "clear-mobile-back");
+    home.setAttribute("aria-label", "Library");
+    const navigation = el("nav", "library-breadcrumbs", undefined, toolbar);
+    navigation.setAttribute("aria-label", "Note location");
+    const books = notebooks(this.host.index);
+    const selected = books.find(b => b.id === this.bookId);
+    const owns = (b: Notebook) => b.folder ? path.startsWith(b.folder + "/") : !path.includes("/");
+    const book = selected && (owns(selected) || selected.sections.some(s => s.entries.some(e => e.path === path)))
+      ? selected : books.filter(owns).sort((a,b) => b.folder.length-a.folder.length)[0];
+    this.bookId = book?.id;
+    this.host.focusNotebook?.(book, path);
+    if (book) {
+      button(navigation, book.title, () => this.openBook(book), "library-crumb");
+      for (const item of topicTrail(this.host.index, book, path)) {
+        el("span", "library-crumb-separator", "›", navigation).setAttribute("aria-hidden", "true");
+        if (item.path === path) el("span", "library-crumb-current", item.title, navigation).setAttribute("aria-current", "page");
+        else button(navigation, item.title, () => this.openNote(item.path), "library-crumb");
+      }
+    } else el("span", "library-crumb-current", n.title, navigation).setAttribute("aria-current", "page");
+    const history = el("div", "library-history", undefined, toolbar);
+    const back = button(history, "←", () => this.travel(-1), "clear-icon-button");
+    back.setAttribute("aria-label", "Previous note"); back.disabled = this.historyIndex <= 0;
+    const forward = button(history, "→", () => this.travel(1), "clear-icon-button");
+    forward.setAttribute("aria-label", "Next note"); forward.disabled = this.historyIndex >= this.history.length - 1;
     const scroll = el("div", "clear-reader-scroll", undefined, this.main);
     const article = el("article", "clear-article", undefined, scroll);
-    el(
-      "p",
-      "clear-breadcrumb",
-      n.path.includes("/")
-        ? n.path.slice(0, n.path.lastIndexOf("/"))
-        : "Your library",
-      article,
-    );
     el("h1", "clear-note-heading", n.title, article);
     if (n.tags.length) {
       const tags = el("div", "clear-tags", undefined, article);
       for (const t of n.tags) el("span", "clear-tag", "#" + t, tags);
-    }
-    if (n.headings.length) {
-      const details = el("details", "clear-outline", undefined, article);
-      el("summary", "", "In this note", details);
-      for (const h of n.headings)
-        button(
-          details,
-          h,
-          () => this.goHeading(article, h),
-          "clear-outline-link",
-        );
     }
     const body = el(
       "div",
@@ -363,23 +320,11 @@ export class Workspace {
       el(
         "p",
         "clear-error",
-        "Unable to render this note. You can still open Edit to inspect its Markdown.",
+        "Unable to render this note. Open the original file in Obsidian to inspect its Markdown.",
         body,
       );
     }
     if (generation !== this.renderId) return;
-    const related = this.host.index.related(path);
-    if (related.length) {
-      const footer = el("section", "clear-related", undefined, article);
-      el("h2", "", "Keep exploring", footer);
-      for (const r of related)
-        button(
-          footer,
-          r.title,
-          () => this.openNote(r.path),
-          "clear-related-link",
-        );
-    }
     const pos = this.host.state.positions.find((p) => p.notePath === path);
     if (anchor) this.goHeading(article, anchor);
     else scroll.scrollTop = pos?.scrollTop ?? 0;
@@ -404,62 +349,14 @@ export class Workspace {
     target?.scrollIntoView?.({ block: "start" });
   }
   private travel(delta: number) {
-    if (!this.allowNavigation()) return;
     const next = this.historyIndex + delta;
     if (next >= 0 && next < this.history.length) {
       this.historyIndex = next;
       void this.openNote(this.history[next], false);
     }
   }
-  private edit(note: NoteRecord) {
-    this.editing = true;
-    this.clearReader();
-    const toolbar = el("div", "clear-reader-toolbar", undefined, this.main);
-    el("strong", "", "Editing " + note.title, toolbar);
-    const save = button(
-      toolbar,
-      "Save",
-      async () => {
-        if (this.saving) return;
-        this.saving = true;
-        save.disabled = true;
-        cancel.disabled = true;
-        try {
-          if (await this.host.saveNote(note.path, note.revision, input.value)) {
-            this.editing = false;
-            await this.openNote(note.path, false);
-          } else
-            this.host.notice(
-              "The note changed elsewhere. Your draft is still here; copy it before cancelling and reopening the latest version.",
-            );
-        } catch {
-          this.host.notice("Could not save. Your draft remains here.");
-        } finally {
-          this.saving = false;
-          save.disabled = false;
-          cancel.disabled = false;
-        }
-      },
-      "clear-primary",
-    );
-    const cancel = button(toolbar, "Cancel", () => {
-      if (this.saving) return;
-      this.editing = false;
-      void this.openNote(note.path, false);
-    });
-    el(
-      "p",
-      "clear-editor-hint",
-      "Markdown editing · Changes are saved only when you press Save.",
-      this.main,
-    );
-    const input = el("textarea", "clear-editor", undefined, this.main);
-    input.value = note.markdown;
-    input.setAttribute("aria-label", "Edit Markdown");
-    input.spellcheck = true;
-    input.focus();
-  }
   destroy() {
+    this.host.focusNotebook?.();
     this.destroyed = true;
     this.renderId++;
     this.cleanup?.();

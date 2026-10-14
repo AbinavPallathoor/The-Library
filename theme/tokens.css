@@ -73,3 +73,13 @@
 .theme-dark .mod-right-split .workspace-leaf-content,
 .theme-dark .workspace-sidedock-vault-profile {background:var(--background-secondary);}
 .theme-dark .modal,.theme-dark .prompt {background:var(--modal-background);}
+
+/* Folder titles carry their paths even in Obsidian's virtualized explorer. */
+.theme-dark .nav-files-container .nav-folder-title {color:#bdcfe5;font-weight:500;}
+.theme-dark .nav-files-container .nav-folder-title[data-path]:not([data-path*="/"]) {background:#263449;color:#c5daf4;font-weight:600;margin-top:14px;margin-bottom:7px;padding-block:9px;border-top:1px solid #40536a;}
+.theme-dark .nav-files-container .nav-file-title {font-size:12px;line-height:1.45;}
+.theme-dark .nav-file-title-content {padding-block:1px;}
+.theme-dark .nav-folder-collapse-indicator {color:#9dbbdf;}
+.theme-dark .nav-files-container {padding-inline:12px;}
+.theme-dark .graph-view.color-fill {color:#a8c8f2;}
+.theme-dark .graph-view.color-line {color:#435973;}

@@ -18,9 +18,11 @@ import { ChangeWriter, proposeCapture } from "./capture/change-writer";
 import { Workspace } from "./views/workspace";
 import workflow from "../docs/workflows/llm-note-workflow.md";
 import { ToolHandlers } from "./bridge/tool-handlers";
+import { NotebookGraphFocus } from "./graph/focus";
 const VIEW = "clear-workspace";
 export default class ClearPlugin extends Plugin {
   state!: ClearState;
+  graphFocus!: NotebookGraphFocus;
   index = new VaultIndex();
   vaultPort!: ObsidianVault;
   writer!: ChangeWriter;
@@ -31,6 +33,7 @@ export default class ClearPlugin extends Plugin {
   private batchDepth = 0;
   private bridge?: { close: () => Promise<void>; descriptorPath: string };
   async onload() {
+    this.graphFocus = new NotebookGraphFocus(this.app.workspace, this.app.metadataCache);
     try {
       this.state = loadState(await this.loadData());
     } catch (e) {
@@ -208,7 +211,7 @@ export default class ClearPlugin extends Plugin {
   async startBridge() {
     if (Platform.isMobile)
       throw Error(
-        "The LLM bridge is desktop-only. Android supports notebooks and editing.",
+        "The LLM bridge is desktop-only. Android supports notebooks and reading.",
       );
     if (this.bridge) return this.bridge.descriptorPath;
     const { startBridge } = await import("./bridge/server");
@@ -222,6 +225,7 @@ export default class ClearPlugin extends Plugin {
     this.bridge = undefined;
   }
   onunload() {
+    this.graphFocus?.restore();
     document.body.classList.remove("library-focus", "library-theme");
     this.stopped = true;
     void this.stopBridge();
@@ -249,6 +253,13 @@ class ClearView extends ItemView {
     this.contentEl.empty();
     this.contentEl.addClass("clear-view");
     this.ui = new Workspace(this.contentEl, {
+      focusNotebook: (book) => {
+        if (!book) { p.graphFocus.restore(); return; }
+        const paths = new Set(book.additional.map(n => n.path));
+        if (book.index) paths.add(book.index.path);
+        for (const section of book.sections) for (const entry of section.entries) if (entry.path) paths.add(entry.path);
+        p.graphFocus.focus([...paths]);
+      },
       state: p.state,
       index: p.index,
       persist: () => p.persist(),
