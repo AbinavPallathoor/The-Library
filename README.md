@@ -2,9 +2,9 @@
 
 A quiet home for your notes in **Obsidian**. Illustrated notebooks, soft blue accents, and comfortable reading—built around ordinary Markdown.
 
-![The Library notebook shelf](docs/testing/library-shelf-desktop.png)
+![The Library in Obsidian with topic notebooks and a colour-coded graph](docs/testing/library-obsidian.png)
 
-*Notebook view with demonstration notes. In Obsidian, the normal title bar, tabs, and sidebars remain available.*
+*The Library running in Obsidian, with topic notebooks and matching colours in the file panel and graph.*
 
 ### Open. Browse. Read.
 
