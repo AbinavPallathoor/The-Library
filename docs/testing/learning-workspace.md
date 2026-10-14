@@ -1,3 +1,15 @@
+# The Library notebook release verification
+
+Date: 2026-10-14. Current checks: 27 unit/integration tests and four release tests passed, plus TypeScript, production builds and ZIP packaging. New regressions cover notebook index cross-links, missing links, additional-note discovery, safe creation paths, root-note ownership, absence of sidebars/Capture, and preserving recall attempts across vault refreshes.
+
+T3 collaborative browser: inspected the shelf and notebook index, tested reader Edit/Cancel, and checked 1440px desktop, 800px tablet and 412px phone widths. Returning to Library at tablet/phone widths keeps the main surface visible with no document overflow. No personal vault was changed.
+
+Independent review found obsolete responsive hiding rules, root-folder ownership, invisible recall tag filtering, and practice refresh state; all four were corrected. Native Obsidian chrome restoration, real device keyboard/back behavior, and third-party diagram rendering still need native desktop/Android acceptance. Procedural artwork is implemented; custom cover uploads and scheduled recall are not.
+
+The older screenshots and verification record below describe the previous Clear interface and are retained as history, not screenshots of this release.
+
+---
+
 # Clear 0.1.0 verification
 
 Date: 2026-10-14. Environment: macOS, Node 26.7.0; Obsidian API package 1.14.4. Native Obsidian 1.14.4 is installed, but its CLI is disabled.

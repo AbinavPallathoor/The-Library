@@ -32,5 +32,5 @@ createServer(async (req, res) => {
     res.end();
   }
 }).listen(5173, "127.0.0.1", () =>
-  console.log("Clear preview: http://127.0.0.1:5173"),
+  console.log("The Library preview: http://127.0.0.1:5173"),
 );

@@ -7,19 +7,19 @@ async function zip(name, files) {
     entries[destination] = new Uint8Array(await readFile(source));
   await writeFile("dist/" + name, zipSync(entries, { level: 9 }));
 }
-await zip("clear-plugin.zip", {
-  "clear/main.js": "main.js",
-  "clear/manifest.json": "manifest.json",
-  "clear/styles.css": "styles.css",
-  "clear/FONT-LICENSE.txt": "theme/FONT-LICENSE.txt",
+await zip("the-library-plugin.zip", {
+  "the-library/main.js": "main.js",
+  "the-library/manifest.json": "manifest.json",
+  "the-library/styles.css": "styles.css",
+  "the-library/FONT-LICENSE.txt": "theme/FONT-LICENSE.txt",
 });
-await zip("clear-theme.zip", {
-  "Clear Night/theme.css": "theme/theme.css",
-  "Clear Night/manifest.json": "theme/manifest.json",
-  "Clear Night/FONT-LICENSE.txt": "theme/FONT-LICENSE.txt",
+await zip("the-library-theme.zip", {
+  "The Library Night/theme.css": "theme/theme.css",
+  "The Library Night/manifest.json": "theme/manifest.json",
+  "The Library Night/FONT-LICENSE.txt": "theme/FONT-LICENSE.txt",
 });
-await zip("clear-mcp.zip", {
-  "clear-mcp/clear-mcp.cjs": "dist/clear-mcp.cjs",
-  "clear-mcp/README.md": "docs/installation/llm-connection.md",
+await zip("the-library-mcp.zip", {
+  "the-library-mcp/the-library-mcp.cjs": "dist/the-library-mcp.cjs",
+  "the-library-mcp/README.md": "docs/installation/llm-connection.md",
 });
-console.log("Packaged Clear plugin, Clear Night theme, and MCP companion.");
+console.log("Packaged The Library plugin, The Library Night theme, and MCP companion.");

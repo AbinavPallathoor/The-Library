@@ -1,29 +1,45 @@
-# Clear
+# The Library
 
-A dark, reading-first Obsidian workspace for one library of learning, ideas and reference notes. Search, follow topic links, pin notes, resume reading, capture thoughts and practise recall. Editing requires **Edit → Save**; Cancel discards the draft. Existing Markdown stays in its current folders.
+A quiet notebook workspace for **Obsidian**. Flat illustrated covers, pastel blue accents, dark surfaces, and an offline Lora reading font. No sidebars or capture screen.
 
-The palette uses deep teal, warm text and muted lavender, with an offline Lora serif. This is an original interpretation of the public Ideaverse aesthetic; the exact paid-vault font has not been verified.
+Open a notebook, browse its index, and read. Editing only begins when you press **Edit**; **Save** commits changes and **Cancel** discards the draft. Revision checks protect notes changed elsewhere.
 
-## Install
+## Your notebooks
 
-1. Extract `dist/clear-plugin.zip` into your vault's `.obsidian/plugins/`. You should have `.obsidian/plugins/clear/main.js`, `manifest.json`, `styles.css` and the font license.
-2. In Obsidian → Settings → Community plugins, enable **Clear**. Open it with the book ribbon icon or **Clear: Open learning workspace**. It opens on startup by default.
-3. Optional: extract `dist/clear-theme.zip` into `.obsidian/themes/`, select **Clear Night** in Appearance, and select dark mode. The Clear workspace itself is dark with any host theme.
+```text
+Notebooks/
+  Robotics/
+    Index.md
+    Feedback loops.md
+    Assets/
+```
 
-Use the same plugin files on **Android**. Copy them into the Android vault's `.obsidian/plugins/clear/`, then enable Clear on that device. The library, reader, guarded editor, capture and recall use mobile-compatible APIs. Only the optional Node MCP bridge requires desktop. Clear does not provide vault synchronization.
+**New notebook** creates a portable `Index.md` with a stable `notebook-id` and title in YAML. Add ordinary Markdown notes beside it. Index headings group `[[wikilinks]]`; unlisted notes appear automatically under Additional notes. Missing links remain visible without creating files. Links to other notebooks open the original note, without making copies.
 
-## Use
+Existing folders appear as notebooks without moving your notes. Root-level notes appear under Unsorted. Add an `Index.md` to curate a folder. The shelf searches notebook titles and note content. Each notebook gets deterministic abstract cover artwork; custom cover uploads are not implemented.
 
-- **Library:** search titles, aliases, headings and content; filter by existing tags. Ideas and Reference are alternate views of the same files.
-- **Topics:** opens notes with hub tags, multiple outgoing links, or topic associations supplied by your LLM.
-- **Reading:** links, outline, pinning and reading position. Notes are not editable until you press Edit. This protection applies inside Clear; Obsidian's own editor remains available outside it.
-- **Recall:** answer before revealing, then assess yourself. This release provides unscheduled practice; no automatic mastery scores or due-date claims.
-- **Capture:** keep a blurt, copy it with LLM instructions, create a note, or apply a structured LLM proposal. Course tags are added only when explicitly supplied.
-- **LLM tools:** [connect the optional MCP companion](docs/installation/llm-connection.md) or use your existing file tools with the [workflow guide](docs/workflows/llm-note-workflow.md).
+The reader includes related links, saved reading positions, and optional recall practice with answers hidden until reveal. Practice is self-assessed and unscheduled. Mermaid renders through Obsidian; Excalidraw and Canvas assets open through their native views when their supporting plugins are available.
 
-Clear never sends notes to a hosted service and has no telemetry or AI API key. Starting the local bridge explicitly lets credential-bearing local clients read and update this vault. It is off on startup.
+## Install on desktop or Android
 
-Undo restores only content that still matches the saved revision. Newly created notes and topic associations are conservatively retained during undo/recovery, with a partial receipt, because Obsidian has no atomic compare-and-delete API. Remove those retained items manually if desired.
+1. Build the archives below, then extract `dist/the-library-plugin.zip` into your vault’s `.obsidian/plugins/`.
+2. Confirm `.obsidian/plugins/the-library/` contains `main.js`, `manifest.json`, and `styles.css`.
+3. Enable **The Library** in Community plugins. Use the book ribbon icon or **The Library: Open learning workspace**.
+4. Optional: extract `dist/the-library-theme.zip` into `.obsidian/themes/`, select **The Library Night**, and choose dark mode.
+
+The workspace is dark independently of the selected theme. Library presentation hides Obsidian sidebars, ribbon, and the active view’s tab/header chrome without deleting panes. **Return to Obsidian** restores the chrome; a command-palette escape is also available. The companion theme styles native views outside Library mode.
+
+Use the same plugin folder on Android. The desktop MCP bridge is optional and requires Node 22+. Vault synchronization is handled by your existing sync service.
+
+**Upgrading from Clear:** disable the old plugin first, copy its `data.json` into the new `the-library` folder if you want to retain prompts, pins, and reading positions, then enable The Library. Existing notes need no migration. Internal font and MCP resource identifiers remain compatible; local bridge credentials still live under `~/.clear/connections/`.
+
+## Notes through your LLM
+
+Explain what you learned to your existing LLM, then ask it to update your notebooks. It should read indexes, search before creating, update coherent topic notes, add useful diagrams, and link new notes into their index. Course codes are optional tags added only when explicitly supplied.
+
+[LLM workflow](docs/workflows/llm-note-workflow.md) · [Connect the MCP companion](docs/installation/llm-connection.md)
+
+The seven desktop tools support revision-checked proposals, writes, receipts, and recall context. No hosted service, telemetry, or AI API key is required by the plugin. The local bridge starts only when explicitly enabled. Existing drafts and receipts remain in plugin data; there is no capture UI.
 
 ## Build and verify
 
@@ -37,4 +53,6 @@ npm run test:release
 npm run preview
 ```
 
-The preview uses demonstration notes, not your vault. [Verification and remaining limitations](docs/testing/learning-workspace.md). Release archives are in `dist/`. No live personal vault is modified by these commands.
+Archives are generated in `dist/`. The browser preview uses demonstration notes. These commands do not modify a personal vault.
+
+Native Obsidian presentation and physical Android behavior still need device validation. Browser layout and the mobile-safe bundle checks do not establish native parity. No automatic spaced-repetition scheduling or custom cover picker is included.

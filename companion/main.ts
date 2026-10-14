@@ -6,7 +6,7 @@ import workflow from "../docs/workflows/llm-note-workflow.md";
 const descriptorPath = process.argv[2];
 if (!descriptorPath) {
   process.stderr.write(
-    "Usage: node clear-mcp.cjs /absolute/path/to/connection.json\n",
+    "Usage: node the-library-mcp.cjs /absolute/path/to/connection.json\n",
   );
   process.exit(1);
 }

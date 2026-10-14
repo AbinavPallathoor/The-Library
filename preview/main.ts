@@ -21,6 +21,10 @@ const samples: Record<string, string> = {
   "Learnings/Robotics.md":
     "---\ntags: [hub, robotics]\n---\n## Sensing and deciding\n[[Learnings/Feedback loops]]\n[[Learnings/Covariance and shared movement]]\n\n## Thinking beyond the parts\n[[Learnings/Thinking in systems]]",
 };
+samples['Learnings/Index.md'] = '---\nnotebook-id: systems\ntitle: Learning & systems\n---\n## Connected thinking\n[[Learnings/Thinking in systems]]\n[[Learnings/Feedback loops]]\n## Learning well\n[[Learnings/How memory becomes durable]]';
+samples['Ideas/Index.md'] = '---\nnotebook-id: ideas\ntitle: Ideas & possibilities\n---\n## Growing ideas\n[[Ideas/A garden of ideas]]';
+samples['Reference/Index.md'] = '---\nnotebook-id: reference\ntitle: Reading & references\n---\n## Reading\n[[Reference/Reading thoughtfully]]';
+samples['Robotics/Index.md'] = '---\nnotebook-id: robots\ntitle: Robotics\n---\n## Foundations\n[[Learnings/Feedback loops]]\n[[Learnings/Covariance and shared movement]]';
 let time = Date.now();
 for (const [path, text] of Object.entries(samples)) {
   index.upsert(
@@ -87,7 +91,7 @@ const ui = new Workspace(document.querySelector("#app")!, {
   },
   applyDraft: async () => {
     throw Error(
-      "Preview uses demonstration notes. Install Clear in Obsidian for vault writes.",
+      "Preview uses demonstration notes. Install The Library in Obsidian for vault writes.",
     );
   },
   undo: async () => {},

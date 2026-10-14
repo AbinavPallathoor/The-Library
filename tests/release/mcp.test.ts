@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { startBridge } from "../../src/bridge/server";
 it("real bundled stdio companion lists tools and calls its authenticated bridge", async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), "clear-mcp-test-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "the-library-mcp-test-"));
   const bridge = await startBridge(
     "test",
     async (name) => ({ name, vaultId: "test" }),
@@ -22,7 +22,7 @@ it("real bundled stdio companion lists tools and calls its authenticated bridge"
     await client.connect(
       new StdioClientTransport({
         command: process.execPath,
-        args: [path.resolve("dist/clear-mcp.cjs"), config],
+        args: [path.resolve("dist/the-library-mcp.cjs"), config],
       }),
     );
     expect((await client.listTools()).tools).toHaveLength(7);

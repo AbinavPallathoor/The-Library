@@ -49,7 +49,7 @@ export default class ClearPlugin extends Plugin {
       () => this.persist(),
     );
     this.registerView(VIEW, (leaf) => new ClearView(leaf, this));
-    this.addRibbonIcon("book-open", "Open Clear", () => void this.open());
+    this.addRibbonIcon("book-open", "Open The Library", () => void this.open());
     this.addCommand({
       id: "open",
       name: "Open learning workspace",
@@ -60,6 +60,9 @@ export default class ClearPlugin extends Plugin {
       name: "Refresh library",
       callback: () => void this.reconcile(),
     });
+    const updatePresentation = () => document.body.classList.toggle("library-focus", this.app.workspace.getActiveViewOfType(ClearView) !== null);
+    this.registerEvent(this.app.workspace.on("active-leaf-change", updatePresentation));
+    this.addCommand({id: "exit-library", name: "Return to Obsidian", callback: () => document.body.classList.remove("library-focus")});
     this.addSettingTab(new ClearSettings(this.app, this));
     this.registerEvent(
       this.app.vault.on("modify", (f) => {
@@ -95,7 +98,7 @@ export default class ClearPlugin extends Plugin {
         await this.writer.recover();
         await this.reconcile();
         if (!this.stopped && this.state.settings.openOnStart) await this.open();
-      })().catch((e) => new Notice("Clear could not initialize: " + String(e)));
+      })().catch((e) => new Notice("The Library could not initialize: " + String(e)));
     });
   }
   private includes(path: string) {
@@ -167,6 +170,7 @@ export default class ClearPlugin extends Plugin {
       await leaf.setViewState({ type: VIEW, active: true });
     }
     await this.app.workspace.revealLeaf(leaf);
+    document.body.classList.add("library-focus");
   }
   async saveNote(
     path: string,
@@ -205,7 +209,7 @@ export default class ClearPlugin extends Plugin {
   async startBridge() {
     if (Platform.isMobile)
       throw Error(
-        "The LLM bridge is desktop-only. Android supports library, editing, capture and recall.",
+        "The LLM bridge is desktop-only. Android supports notebooks, editing and recall.",
       );
     if (this.bridge) return this.bridge.descriptorPath;
     const { startBridge } = await import("./bridge/server");
@@ -219,6 +223,7 @@ export default class ClearPlugin extends Plugin {
     this.bridge = undefined;
   }
   onunload() {
+    document.body.classList.remove("library-focus");
     this.stopped = true;
     void this.stopBridge();
   }
@@ -235,7 +240,7 @@ class ClearView extends ItemView {
     return VIEW;
   }
   getDisplayText() {
-    return "Clear";
+    return "The Library";
   }
   getIcon() {
     return "book-open";
@@ -245,6 +250,7 @@ class ClearView extends ItemView {
     this.contentEl.empty();
     this.contentEl.addClass("clear-view");
     this.ui = new Workspace(this.contentEl, {
+      exit: () => document.body.classList.remove("library-focus"),
       state: p.state,
       index: p.index,
       persist: () => p.persist(),
@@ -316,9 +322,9 @@ class ClearSettings extends PluginSettingTab {
   display() {
     const p = this.plugin;
     this.containerEl.empty();
-    this.containerEl.createEl("h2", { text: "Clear" });
+    this.containerEl.createEl("h2", { text: "The Library" });
     new Setting(this.containerEl)
-      .setName("Open Clear on startup")
+      .setName("Open The Library on startup")
       .addToggle((t) =>
         t.setValue(p.state.settings.openOnStart).onChange(async (v) => {
           p.state.settings.openOnStart = v;
@@ -342,17 +348,6 @@ class ClearSettings extends PluginSettingTab {
       .addButton((b) =>
         b.setButtonText("Refresh library").onClick(() => void p.reconcile()),
       );
-    new Setting(this.containerEl)
-      .setName("New note folder")
-      .setDesc(
-        "Used only for notes you explicitly create in Capture. Existing notes stay where they are.",
-      )
-      .addText((t) =>
-        t.setValue(p.state.settings.captureFolder).onChange(async (v) => {
-          p.state.settings.captureFolder = v.trim();
-          await p.persist();
-        }),
-      );
     new Setting(this.containerEl).setName("Reading font").addDropdown((d) =>
       d
         .addOptions({
@@ -368,7 +363,7 @@ class ClearSettings extends PluginSettingTab {
         }),
     );
     new Setting(this.containerEl)
-      .setName("Export Clear registry")
+      .setName("Export The Library registry")
       .setDesc(
         "Pins, prompts, drafts and receipts. Markdown content stays in your vault.",
       )

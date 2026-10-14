@@ -1,19 +1,19 @@
-# Connect your LLM to Clear
+# Connect your LLM to The Library
 
-Clear works without an AI account or API key. Your existing LLM filesystem tools can follow [the note workflow](../workflows/llm-note-workflow.md). Capture also copies that guide with your blurt and accepts a JSON proposal.
+The Library works without an AI account or API key. Your existing LLM filesystem tools can follow [the note workflow](../workflows/llm-note-workflow.md). Explain your blurt in your LLM client; there is no capture screen.
 
 For revision-protected tools on desktop:
 
-1. Install the Clear plugin and open the vault in Obsidian.
-2. In Settings → Clear, press **Start local bridge**. It displays a connection-file path under `~/.clear/connections/`. This local file contains the credential; do not sync or share it.
-3. Extract `clear-mcp.zip`. With Node 22 or newer installed, add this stdio server to your LLM client's MCP settings, substituting absolute paths:
+1. Install the The Library plugin and open the vault in Obsidian.
+2. In Settings → The Library, press **Start local bridge**. It displays a connection-file path under `~/.clear/connections/`. This local file contains the credential; do not sync or share it.
+3. Extract `the-library-mcp.zip`. With Node 22 or newer installed, add this stdio server to your LLM client's MCP settings, substituting absolute paths:
 
 ```json
 {
   "mcpServers": {
-    "clear": {
+    "the-library": {
       "command": "node",
-      "args": ["/absolute/path/clear-mcp.cjs", "/absolute/path/to/connection.json"]
+      "args": ["/absolute/path/the-library-mcp.cjs", "/absolute/path/to/connection.json"]
     }
   }
 }
@@ -23,4 +23,4 @@ The server exposes `get_workspace_policy`, `find_notes`, `read_note`, `propose_c
 
 The bridge starts only when requested, binds to localhost, and stops when the plugin unloads. Restart it after reopening Obsidian. A connected client with the credential can read and change Markdown in this vault. No hosted service or telemetry is involved.
 
-Android runs the library, reader, guarded editor, capture, and recall. The Node MCP bridge runs on desktop. Changes can be synchronized using your existing vault-sync setup; Clear is not a synchronization service.
+Android runs the library, reader, guarded editor, and recall. The Node MCP bridge runs on desktop. Changes can be synchronized using your existing vault-sync setup; The Library is not a synchronization service.

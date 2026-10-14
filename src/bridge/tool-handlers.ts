@@ -60,7 +60,7 @@ export class ToolHandlers {
         return {
           vaultId: this.state.vaultId,
           organization:
-            "One library. Update existing coherent topics first. Preserve paths, frontmatter, Unicode, math and sources.",
+            "One library organized in notebook folders with Index.md. Read indexes and update existing coherent topics first. New notebooks use Notebooks/Name/Index.md with a stable notebook-id and title in YAML. Keep one canonical note and link it from other indexes; add new notes to a meaningful index section. Preserve paths, notebook-id, frontmatter, Unicode, math and sources. Never move existing notes without explicit instruction.",
           courseTags:
             "Only add #course/CODE when explicitly supplied for this capture. Never infer a code.",
           revision:

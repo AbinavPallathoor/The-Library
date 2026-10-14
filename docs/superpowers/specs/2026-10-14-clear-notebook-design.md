@@ -1,3 +1,7 @@
+# The Library notebook workspace
+
+Implemented direction updated October 14: pastel blue, flat abstract cover art, no skeuomorphism. See the current [README](../../../README.md) and [implementation record](../plans/2026-10-14-the-library-notebooks.md). The original concept below is retained as design history; native device validation remains outstanding.
+
 # Clear notebook workspace — proposed redesign
 
 Status: visual concept for review. The user approved developing this direction after rejecting the dashboard. This document supersedes the prior library/sidebar UI direction for the next implementation; the existing plugin has not yet been rebuilt.

@@ -131,3 +131,26 @@ it("mobile Library navigation leaves Home and unchanged refresh does not rerende
   expect(root.dataset.screen).toBe("list");
   ui.destroy();
 });
+it('launches into a notebook shelf without capture or sidebars, then opens its index', () => {
+ const {root,ui,index} = setup();
+ index.upsert('Robotics/Index.md','## Foundations\n[[Robotics/Feedback]]');
+ index.upsert('Robotics/Feedback.md','Feedback explanation');
+ ui.refresh();
+ expect(root.querySelector('aside')).toBeNull();
+ expect(root.textContent).not.toContain('Capture');
+ (root.querySelector('[aria-label="Open notebook Robotics"]') as HTMLButtonElement).click();
+ expect(root.textContent).toContain('Foundations');
+ expect(root.textContent).toContain('Feedback');
+ expect(root.querySelector('textarea')).toBeNull();
+ ui.destroy();
+});
+it('keeps a note recall attempt when unrelated vault events refresh the view', async () => {
+ const {root,ui,state} = setup();
+ state.prompts.push({id:'p',notePath:'Learning.md',question:'Explain',answer:'Answer',kind:'explain',evidence:'source-backed',enrolled:true});
+ await ui.openNote('Learning.md');
+ [...root.querySelectorAll('button')].find(b => b.textContent==='Recall')!.click();
+ const attempt = root.querySelector('textarea,input');
+ ui.refresh();
+ expect(root.querySelector('textarea,input')).toBe(attempt);
+ ui.destroy();
+});

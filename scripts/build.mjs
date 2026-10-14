@@ -14,7 +14,7 @@ await build({
 });
 await build({
   entryPoints: ["companion/main.ts"],
-  outfile: "dist/clear-mcp.cjs",
+  outfile: "dist/the-library-mcp.cjs",
   bundle: true,
   format: "cjs",
   platform: "node",
@@ -35,7 +35,7 @@ for (const [weight, style] of [
 }
 await writeFile(
   "styles.css",
-  fonts + (await readFile("src/styles.css", "utf8")),
+  fonts + (await readFile("src/styles.css", "utf8")) + (await readFile("theme/tokens.css", "utf8")).replace(".theme-dark", "body.library-focus"),
 );
 await writeFile(
   "theme/theme.css",
