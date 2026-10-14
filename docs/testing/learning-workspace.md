@@ -42,3 +42,13 @@ Obsidian supplies an atomic read/modify operation for content, but not a compare
 Open the generated fixture in Obsidian, enable Clear, then browse → read Mermaid → follow link → return → Edit → Save/Cancel → add recall → reveal/assess → change a note externally → retry stale write → rename a folder → reload/unload. Repeat reading, search, editing, keyboard and recall on Android. Run OSR/Excalidraw-specific tests before advertising those integrations as verified.
 
 Browser screenshots: [desktop](clear-desktop.png), [reader](clear-reader.png), [phone layout](clear-android-layout.png).
+
+## UI refinement screenshot pass
+
+The shelf now uses original offline vector covers, single notebook titles, quieter controls and consistent spacing. The index has a cover thumbnail and secondary note headings; reader navigation and actions form deliberate rows on phones. Old sidebar CSS was removed.
+
+Inspected screenshots of shelf, index and reader at 1280, 800, 412 and 360 pixels. A second pass corrected the wrapped Edit button. Browser checks reported no page errors or document overflow and verified Edit/Cancel. All 31 existing tests and TypeScript/build/package checks passed.
+
+Installed the update in DigitalBrain, re-enabled the plugin and visually inspected its shelf in native Obsidian. That inspection prompted explicit background scoping and macOS window-control clearance. The final CSS was copied into the vault; subsequent native UI automation returned invalid-element/no-window errors, so final native interaction checks remain incomplete. No note content was changed. Physical Android remains unverified.
+
+Current screenshots: [desktop shelf](library-shelf-desktop.png), [desktop index](library-index-desktop.png), [desktop reader](library-reader-desktop.png), [phone shelf](library-shelf-360.png), [phone index](library-index-360.png), [phone reader](library-reader-412.png).

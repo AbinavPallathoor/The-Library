@@ -8,6 +8,7 @@ import type {
 import { VaultIndex } from "../index/vault-index";
 import { parseNoteStyle, layoutMode } from "../domain/core";
 import { eligiblePrompts } from "../study/prompts";
+import { cover } from "./cover";
 import { notebooks, notebookDraft, type Notebook } from "../notebooks/model";
 import { el, button, field, select } from "./dom";
 export interface WorkspaceHost {
@@ -64,7 +65,8 @@ export class Workspace {
       this.host.state.settings.readingFont || "Clear Lora",
     );
     this.nav = el("header", "library-topbar", undefined, this.root);
-    button(this.nav, "The Library", () => this.navigate("Library"), "library-wordmark");
+    const brand = button(this.nav, "The Library", () => this.navigate("Library"), "library-wordmark");
+    const mark = el("span", "library-logo", "", brand); mark.setAttribute("aria-hidden", "true");
     const actions = el("div", "library-top-actions", undefined, this.nav);
     button(actions, "Practice", () => this.navigate("Review"), "clear-text-button");
     if (this.host.exit) button(actions, "Return to Obsidian", this.host.exit, "clear-text-button");
@@ -146,9 +148,12 @@ export class Workspace {
     this.clearReader();
     const wrap = el("section", "library-shelf", undefined, this.main);
     const heading = el("div", "library-heading", undefined, wrap);
-    el("h1", "", "Notebooks", heading);
+    const headingText = el("div", "library-heading-text", undefined, heading);
+    el("h1", "", "Notebooks", headingText);
+    el("p", "library-description", `${notebooks(this.host.index).length} notebooks in your library`, headingText);
     button(heading, "New notebook", () => this.newNotebook(), "clear-primary");
     const tools = el("div", "library-tools", undefined, wrap);
+    el("span", "library-collection-label", "All notebooks", tools);
     const search = el("input", "clear-search", undefined, tools);
     search.type = "search"; search.placeholder = "Search notebooks and notes";
     search.setAttribute("aria-label", search.placeholder);
@@ -161,11 +166,11 @@ export class Workspace {
       for (const book of books.filter(b => !query || b.title.toLowerCase().includes(query))) {
         const tile = button(results, "", () => this.openBook(book), "library-book");
         tile.setAttribute("aria-label", "Open notebook " + book.title);
-        const art = el("div", "library-cover art-" + book.cover, undefined, tile);
-        for (let i=0; i<4; i++) el("i", "", undefined, art).setAttribute("aria-hidden", "true");
-        el("span", "library-cover-title", book.title, art);
-        el("strong", "", book.title, tile);
-        el("span", "clear-muted", `${book.additional.length + book.sections.reduce((n,s) => n+s.entries.length,0)} notes`, tile);
+        cover(tile, book.title, book.cover);
+        const caption = el("div", "library-book-caption", undefined, tile);
+        const count = book.additional.length + book.sections.reduce((n,s) => n+s.entries.length,0);
+        el("span", "clear-muted", `${count} ${count === 1 ? "note" : "notes"}`, caption);
+        el("span", "library-open-arrow", "↗", caption).setAttribute("aria-hidden", "true");
       }
       if (query) for (const note of this.host.index.findNotes({text:query,tags:[],sort:"title"}).slice(0,60)) {
         const row = button(results, "", () => this.openNote(note.path), "library-search-note");
@@ -200,15 +205,25 @@ export class Workspace {
     this.clearReader(); this.root.dataset.screen = "list";
     const wrap = el("section", "library-index", undefined, this.main);
     button(wrap, "All notebooks", () => this.navigate("Library"), "clear-text-button");
-    const heading = el("div", "library-heading", undefined, wrap);
-    el("h1", "", book.title, heading);
+    const heading = el("div", "library-heading library-notebook-heading", undefined, wrap);
+    const miniature = el("div", "library-mini-cover", undefined, heading);
+    cover(miniature, "", book.cover);
+    const titleBlock = el("div", "library-heading-text", undefined, heading);
+    el("p", "library-description", "Notebook", titleBlock);
+    el("h1", "", book.title, titleBlock);
+    el("p", "library-description", "Contents", titleBlock);
     if (book.index) {
       const actions = el("div", "library-top-actions", undefined, heading);
       button(actions, "Read index", () => this.openNote(book.index!.path), "clear-text-button");
       button(actions, "Edit index", () => this.edit(book.index!), "clear-text-button");
     }
     const row = (title: string, path?: string) => {
-      const b = button(wrap, title + (path ? "" : " — not created"), () => path && this.openNote(path), "library-index-row");
+      const b = button(wrap, "", () => path && this.openNote(path), "library-index-row");
+      const text = el("span", "library-row-text", undefined, b);
+      el("span", "library-row-title", title, text);
+      const note = path && this.host.index.notes.get(path);
+      el("span", "library-row-detail", note ? note.headings[0] || note.role : "Not created yet", text);
+      el("span", "library-open-arrow", "↗", b).setAttribute("aria-hidden", "true");
       b.disabled = !path;
     };
     for (const section of book.sections) {
@@ -243,16 +258,17 @@ export class Workspace {
     this.clearReader();
     const generation = this.renderId;
     const toolbar = el("div", "clear-reader-toolbar", undefined, this.main);
+    const navigation = el("div", "library-reader-navigation", undefined, toolbar);
     button(
-      toolbar,
+      navigation,
       "Library",
       () => this.navigate("Library"),
       "clear-mobile-back",
     );
     const book = notebooks(this.host.index).find(b => b.id === this.bookId) ?? notebooks(this.host.index).filter(b => path.startsWith(b.folder + "/")).sort((a,b) => b.folder.length-a.folder.length)[0];
-    if (book) button(toolbar, book.title, () => this.openBook(book), "clear-text-button");
+    if (book) button(navigation, book.title, () => this.openBook(book), "clear-text-button");
     const back = button(
-      toolbar,
+      navigation,
       "←",
       () => this.travel(-1),
       "clear-icon-button",
@@ -260,16 +276,16 @@ export class Workspace {
     back.setAttribute("aria-label", "Previous note");
     back.disabled = this.historyIndex <= 0;
     const forward = button(
-      toolbar,
+      navigation,
       "→",
       () => this.travel(1),
       "clear-icon-button",
     );
     forward.setAttribute("aria-label", "Next note");
     forward.disabled = this.historyIndex >= this.history.length - 1;
-    el("span", "clear-reading-label", "Reading", toolbar);
+    const actions = el("div", "library-reader-actions", undefined, toolbar);
     const pin = button(
-      toolbar,
+      actions,
       this.host.state.pins.includes(path) ? "Unpin" : "Pin",
       () => {
         const s = this.host.state;
@@ -280,8 +296,8 @@ export class Workspace {
         this.persist();
       },
     );
-    button(toolbar, "Recall", () => this.review(path));
-    button(toolbar, "Edit", () => this.edit(n), "clear-primary");
+    button(actions, "Recall", () => this.review(path));
+    button(actions, "Edit", () => this.edit(n), "clear-primary");
     const scroll = el("div", "clear-reader-scroll", undefined, this.main);
     const article = el("article", "clear-article", undefined, scroll);
     el(
