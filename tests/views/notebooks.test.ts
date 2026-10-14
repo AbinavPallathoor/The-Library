@@ -15,7 +15,7 @@ it('keeps curated cross-links and discovers unlisted notes without duplicating s
 });
 it('new notebooks use portable Markdown and reject unsafe names', () => {
  const draft = notebookDraft('Robotics', 'id');
- expect(draft.path).toBe('Notebooks/Robotics/Index.md');
+ expect(draft.path).toBe('Notebooks/Robotics/Robotics.md');
  expect(draft.markdown).toContain('notebook-id: id');
  expect(() => notebookDraft('../Escape', 'id')).toThrow();
 });
@@ -23,4 +23,16 @@ it('does not let loose root notes absorb other folders', () => {
  const index = new VaultIndex();
  index.upsert('Loose.md','Root'); index.upsert('Science/A.md','A'); index.upsert('Art/B.md','B');
  expect(notebooks(index).map(b => [b.title,b.additional.length])).toEqual([['Art',1],['Science',1],['Unsorted',1]]);
+});
+
+it('recognizes a named notebook by its stable metadata without creating another shelf', () => {
+ const index = new VaultIndex();
+ index.upsert('Learnings/Computer Networking/Computer Networking.md','---\nnotebook-id: networking\ntitle: Computer Networking\n---\n## Models\n[[OSI Model]]');
+ index.upsert('Learnings/Computer Networking/OSI Model.md','Layers');
+ const books = notebooks(index);
+ expect(books).toHaveLength(1);
+ expect(books[0].id).toBe('networking');
+ expect(books[0].index?.title).toBe('Computer Networking');
+ expect(books[0].sections[0].entries[0].path).toBe('Learnings/Computer Networking/OSI Model.md');
+ expect(books[0].additional).toEqual([]);
 });

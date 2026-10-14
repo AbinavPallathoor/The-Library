@@ -19,10 +19,15 @@ import { Workspace } from "./views/workspace";
 import workflow from "../docs/workflows/llm-note-workflow.md";
 import { ToolHandlers } from "./bridge/tool-handlers";
 import { NotebookGraphFocus } from "./graph/focus";
+import { notebooks } from "./notebooks/model";
+import { notebookColour } from "./notebooks/colours";
+import { NotebookGraphColours } from "./graph/colours";
 const VIEW = "clear-workspace";
 export default class ClearPlugin extends Plugin {
   state!: ClearState;
   graphFocus!: NotebookGraphFocus;
+  graphColours!: NotebookGraphColours;
+  private colourStyle?: HTMLStyleElement;
   index = new VaultIndex();
   vaultPort!: ObsidianVault;
   writer!: ChangeWriter;
@@ -33,6 +38,7 @@ export default class ClearPlugin extends Plugin {
   private batchDepth = 0;
   private bridge?: { close: () => Promise<void>; descriptorPath: string };
   async onload() {
+    this.graphColours = new NotebookGraphColours(this.app.workspace);
     this.graphFocus = new NotebookGraphFocus(this.app.workspace, this.app.metadataCache);
     try {
       this.state = loadState(await this.loadData());
@@ -65,7 +71,9 @@ export default class ClearPlugin extends Plugin {
     });
     document.body.classList.remove("library-focus");
     document.body.classList.add("library-theme");
+    this.colourStyle = document.head.createEl("style");
     this.addSettingTab(new ClearSettings(this.app, this));
+    this.registerEvent(this.app.workspace.on("layout-change", () => this.applyColours()));
     this.registerEvent(
       this.app.vault.on("modify", (f) => {
         if (f instanceof TFile) void this.update(f);
@@ -160,8 +168,24 @@ export default class ClearPlugin extends Plugin {
     this.saving = next.catch(() => {});
     return next;
   }
+  applyColours() {
+    if (this.stopped || !this.state || !this.colourStyle) return;
+    const books = notebooks(this.index);
+    this.colourStyle.textContent = books.map(book => {
+      const colour = notebookColour(book, this.state.settings.notebookColours);
+      return `body.library-theme .nav-files-container .nav-folder-title[data-path="${CSS.escape(book.folder)}"] {--library-folder-ink:${colour}!important;--library-folder-bg:${colour}22!important;}`;
+    }).join("\n");
+    this.graphColours.apply(books.map(book => ({
+      colour: notebookColour(book, this.state.settings.notebookColours),
+      paths: [...this.index.notes.keys()].filter(path => {
+        const owner = books.filter(b => b.folder ? path.startsWith(b.folder + "/") : !path.includes("/")).sort((a,b) => b.folder.length-a.folder.length)[0];
+        return owner?.id === book.id;
+      }),
+    })));
+  }
   refreshViews() {
     if (this.batchDepth || this.stopped) return;
+    this.applyColours();
     for (const leaf of this.app.workspace.getLeavesOfType(VIEW))
       (leaf.view as ClearView).ui?.refresh();
   }
@@ -225,7 +249,10 @@ export default class ClearPlugin extends Plugin {
     this.bridge = undefined;
   }
   onunload() {
+    this.stopped = true;
     this.graphFocus?.restore();
+    this.graphColours?.restore();
+    this.colourStyle?.remove();
     document.body.classList.remove("library-focus", "library-theme");
     this.stopped = true;
     void this.stopBridge();
@@ -254,7 +281,7 @@ class ClearView extends ItemView {
     this.contentEl.addClass("clear-view");
     this.ui = new Workspace(this.contentEl, {
       focusNotebook: (book) => {
-        if (!book) { p.graphFocus.restore(); return; }
+        if (!book) { p.graphFocus.restore(); p.applyColours(); return; }
         const paths = new Set(book.additional.map(n => n.path));
         if (book.index) paths.add(book.index.path);
         for (const section of book.sections) for (const entry of section.entries) if (entry.path) paths.add(entry.path);
@@ -357,6 +384,23 @@ class ClearSettings extends PluginSettingTab {
       .addButton((b) =>
         b.setButtonText("Refresh library").onClick(() => void p.reconcile()),
       );
+    this.containerEl.createEl("h3", {text:"Notebook colours"});
+    this.containerEl.createEl("p", {text:"Choose the colour used in the file panel and graph."});
+    for (const book of notebooks(p.index)) {
+      new Setting(this.containerEl).setName(book.title)
+        .addColorPicker(c => c.setValue(notebookColour(book,p.state.settings.notebookColours)).onChange(async colour => {
+          p.state.settings.notebookColours ??= {};
+          p.state.settings.notebookColours[book.id] = colour;
+          p.applyColours();
+          await p.persist();
+        }))
+        .addButton(b => b.setButtonText("Reset").onClick(async () => {
+          delete p.state.settings.notebookColours?.[book.id];
+          p.applyColours();
+          await p.persist();
+          this.display();
+        }));
+    }
     new Setting(this.containerEl).setName("Reading font").addDropdown((d) =>
       d
         .addOptions({

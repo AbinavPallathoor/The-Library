@@ -92,6 +92,7 @@ export interface ClearState {
     captureFolder: string;
     openOnStart: boolean;
     readingFont: string;
+    notebookColours?: Record<string, string>;
   };
   captures: {
     id: string;

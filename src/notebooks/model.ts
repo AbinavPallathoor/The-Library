@@ -10,9 +10,10 @@ export interface Notebook {
 export function notebooks(index: VaultIndex): Notebook[] {
  const books: Notebook[] = [];
  for (const note of index.notes.values()) {
-  if (!/(^|\/)Index\.md$/i.test(note.path)) continue;
   let meta: Record<string, unknown> = {};
   try { meta = parse(parseNoteStyle(note.markdown).frontmatter) || {}; } catch {}
+  const declaredNotebook = typeof meta['notebook-id'] === 'string' && meta['notebook-id'].trim().length > 0;
+  if (!declaredNotebook && !/(^|\/)Index\.md$/i.test(note.path)) continue;
   const folder = note.path.includes('/') ? note.path.slice(0, note.path.lastIndexOf('/')) : '';
   const book: Notebook = { id: String(meta['notebook-id'] || note.path), title: String(meta.title || folder.split('/').pop() || 'Notebook'), folder, index: note, cover: 0, sections: [], additional: [] };
   let section = { title: 'Contents', entries: [] as {title:string;path?:string}[] };
@@ -43,5 +44,5 @@ export function notebooks(index: VaultIndex): Notebook[] {
 export function notebookDraft(title: string, id: string) {
  title = title.trim();
  if (!title || title.length > 80 || /[\\/:*?"<>|\[\]#\n\r]/.test(title) || title.startsWith('.') || title.endsWith('.')) throw Error('Use a notebook name without path separators or special characters.');
- return {path: `Notebooks/${title}/Index.md`, markdown: `---\n${stringify({'notebook-id':id,title})}---\n\n## Notes\n\n`};
+ return {path: `Notebooks/${title}/${title}.md`, markdown: `---\n${stringify({'notebook-id':id,title})}---\n\n## Notes\n\n`};
 }

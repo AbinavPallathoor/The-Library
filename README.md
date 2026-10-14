@@ -8,7 +8,7 @@ A quiet home for your notes in **Obsidian**. Illustrated notebooks, soft blue ac
 
 ### Open. Browse. Read.
 
-- **Notebooks** — existing folders become browsable collections. An optional `Index.md` groups notes with headings and wikilinks.
+- **Notebooks** — existing folders become browsable collections. A notebook-named index (for example `Computer Networking.md`) groups notes with headings and wikilinks; YAML `notebook-id` identifies it. Legacy `Index.md` files still work.
 - **Focused reading** — follow connections and resume your reading position. Read without editing controls, extra outlines, or related-note panels.
 - **Clear navigation** — ordered notebook → topic → note breadcrumbs, with distinct folder sections in Obsidian’s explorer.
 - **Notebook graph** — existing graph panes focus on the notebook and its direct connections, then restore when you return to the shelf.
@@ -16,11 +16,13 @@ A quiet home for your notes in **Obsidian**. Illustrated notebooks, soft blue ac
 
 Breadcrumb topics come from notes tagged `hub` and their links. Graph focusing uses guarded Obsidian core APIs; native centering verification is still pending.
 
+Change notebook colours in **Settings → The Library → Notebook colours**. Each colour is shared by its file-panel heading and graph nodes.
+
 The Library opens on startup. Notes stay in their existing folders; cross-notebook links open the original file. Add or organize notebooks through Obsidian or your LLM’s file tools.
 
 ### Install
 
-1. Build the project, then extract `dist/the-library-plugin.zip` into your vault’s `.obsidian/plugins/`.
+1. Download `the-library-plugin.zip` from the [latest GitHub release](https://github.com/AbinavPallathoor/The-Library/releases/latest), then extract it into your vault’s `.obsidian/plugins/`.
 2. Enable **The Library** under Community plugins.
 3. Open it using the book icon or **The Library: Open learning workspace**.
 

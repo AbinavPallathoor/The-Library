@@ -126,7 +126,7 @@ export class Workspace {
     const wrap = el("section", "library-shelf", undefined, this.main);
     const heading = el("div", "library-heading", undefined, wrap);
     const headingText = el("div", "library-heading-text", undefined, heading);
-    el("h1", "", "Notebooks", headingText);
+    el("h1", "", "The Library", headingText);
     el("p", "library-description", `${notebooks(this.host.index).length} notebooks in your library`, headingText);
     const tools = el("div", "library-tools", undefined, wrap);
     el("span", "library-collection-label", "All notebooks", tools);
