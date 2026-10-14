@@ -35,7 +35,7 @@ for (const [weight, style] of [
 }
 await writeFile(
   "styles.css",
-  fonts + (await readFile("src/styles.css", "utf8")) + (await readFile("theme/tokens.css", "utf8")).replace(".theme-dark", "body.library-focus"),
+  fonts + (await readFile("src/styles.css", "utf8")) + (await readFile("theme/tokens.css", "utf8")).replaceAll(".theme-dark", "body.library-theme"),
 );
 await writeFile(
   "theme/theme.css",

@@ -19,8 +19,8 @@ For revision-protected tools on desktop:
 }
 ```
 
-The server exposes `get_workspace_policy`, `find_notes`, `read_note`, `propose_capture`, `apply_changes`, `get_receipt`, and `get_review_context`. Workflow and policy are also MCP resources. Read policy and search first; the policy includes the full capture JSON schema. Propose stores a draft; apply writes its exact contents with revision checks. Reuse the same request ID after a lost response. Changed content requires a new ID.
+The server exposes `get_workspace_policy`, `find_notes`, `read_note`, `propose_capture`, `apply_changes`, and `get_receipt`. Workflow and policy are also MCP resources. Read policy and search first; the policy includes the full capture JSON schema. Propose stores a draft; apply writes its exact contents with revision checks. Reuse the same request ID after a lost response. Changed content requires a new ID.
 
 The bridge starts only when requested, binds to localhost, and stops when the plugin unloads. Restart it after reopening Obsidian. A connected client with the credential can read and change Markdown in this vault. No hosted service or telemetry is involved.
 
-Android runs the library, reader, guarded editor, and recall. The Node MCP bridge runs on desktop. Changes can be synchronized using your existing vault-sync setup; The Library is not a synchronization service.
+Android runs the library, reader, guarded editor. The Node MCP bridge runs on desktop. Changes can be synchronized using your existing vault-sync setup; The Library is not a synchronization service.

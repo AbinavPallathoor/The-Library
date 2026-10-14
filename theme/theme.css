@@ -33,3 +33,46 @@
   --tag-color: #c2d7f5;
   --tag-background: #29384e;
 }
+
+.theme-dark {
+  color-scheme: dark;
+  --background-primary: #171b23;
+  --background-primary-alt: #1c222c;
+  --background-secondary: #1b212b;
+  --background-secondary-alt: #171b23;
+  --background-modifier-border: #303947;
+  --background-modifier-form-field: #202936;
+  --background-modifier-hover: #293445;
+  --interactive-normal: #253143;
+  --interactive-hover: #314158;
+  --text-on-accent: #172337;
+  --titlebar-background: #171b23;
+  --titlebar-background-focused: #171b23;
+  --tab-background-active: #263143;
+  --tab-text-color-active: #dce8f8;
+  --tab-outline-color: transparent;
+  --nav-item-color: #a5b2c3;
+  --nav-item-color-hover: #e9edf2;
+  --nav-item-background-hover: #263143;
+  --nav-item-background-active: #2a3c54;
+  --nav-item-color-active: #c8dfff;
+  --divider-color: #303947;
+  --ribbon-background: #171b23;
+  --search-result-background: #202936;
+  --modal-background: #1c2430;
+  --prompt-background: #1c2430;
+  --input-radius: 7px;
+  --tab-radius: 7px;
+  --radius-s: 5px;
+  --radius-m: 8px;
+}
+.theme-dark .workspace-tab-header.is-active {box-shadow:none;}
+.theme-dark .nav-file-title,.theme-dark .nav-folder-title {border-radius:6px;padding-top:6px;padding-bottom:6px;}
+.theme-dark .workspace,
+.theme-dark .workspace-tabs .workspace-tab-header-container,
+.theme-dark .workspace-ribbon,
+.theme-dark .status-bar {background:var(--background-secondary);}
+.theme-dark .mod-left-split .workspace-leaf-content,
+.theme-dark .mod-right-split .workspace-leaf-content,
+.theme-dark .workspace-sidedock-vault-profile {background:var(--background-secondary);}
+.theme-dark .modal,.theme-dark .prompt {background:var(--modal-background);}

@@ -1,16 +1,14 @@
 import type {
   ClearState,
   NoteRecord,
-  RecallPrompt,
   Receipt,
   CaptureDraft,
 } from "../domain/types";
 import { VaultIndex } from "../index/vault-index";
 import { parseNoteStyle, layoutMode } from "../domain/core";
-import { eligiblePrompts } from "../study/prompts";
 import { cover } from "./cover";
-import { notebooks, notebookDraft, type Notebook } from "../notebooks/model";
-import { el, button, field, select } from "./dom";
+import { notebooks, type Notebook } from "../notebooks/model";
+import { el, button } from "./dom";
 export interface WorkspaceHost {
   exit?: () => void;
   state: ClearState;
@@ -33,7 +31,7 @@ export interface WorkspaceHost {
   undo: (id: string) => Promise<void>;
   workflow: string;
 }
-type Page = "Home" | "Library" | "Review";
+type Page = "Home" | "Library";
 export class Workspace {
   private displayedRevision?: string;
   private page: Page = "Home";
@@ -68,7 +66,6 @@ export class Workspace {
     const brand = button(this.nav, "The Library", () => this.navigate("Library"), "library-wordmark");
     const mark = el("span", "library-logo", "", brand); mark.setAttribute("aria-hidden", "true");
     const actions = el("div", "library-top-actions", undefined, this.nav);
-    button(actions, "Practice", () => this.navigate("Review"), "clear-text-button");
     if (this.host.exit) button(actions, "Return to Obsidian", this.host.exit, "clear-text-button");
     this.list = el("div", "library-unused", undefined, this.root);
     this.list.hidden = true;
@@ -109,8 +106,7 @@ export class Workspace {
     this.bookId = undefined;
     this.root.dataset.screen = "list";
     this.root.dataset.page = page;
-    if (page === "Review") this.review();
-    else this.shelf();
+    this.shelf();
   }
   refresh() {
     if (this.destroyed) return;
@@ -132,7 +128,7 @@ export class Workspace {
           );
         } else if (note.revision !== this.displayedRevision)
           void this.openNote(this.current, false);
-      } else if (this.page !== "Review") {
+      } else {
         const book = notebooks(this.host.index).find(b => b.id === this.bookId);
         if (book) this.openBook(book); else this.shelf();
       }
@@ -151,7 +147,6 @@ export class Workspace {
     const headingText = el("div", "library-heading-text", undefined, heading);
     el("h1", "", "Notebooks", headingText);
     el("p", "library-description", `${notebooks(this.host.index).length} notebooks in your library`, headingText);
-    button(heading, "New notebook", () => this.newNotebook(), "clear-primary");
     const tools = el("div", "library-tools", undefined, wrap);
     el("span", "library-collection-label", "All notebooks", tools);
     const search = el("input", "clear-search", undefined, tools);
@@ -176,28 +171,9 @@ export class Workspace {
         const row = button(results, "", () => this.openNote(note.path), "library-search-note");
         el("strong", "", note.title, row); el("span", "clear-muted", note.path, row);
       }
-      if (!results.children.length) el("p", "clear-empty", query ? "No matches. Try another phrase." : "Create your first notebook. Existing Markdown folders also appear here.", results);
+      if (!results.children.length) el("p", "clear-empty", query ? "No matches. Try another phrase." : "Add a folder of Markdown notes to your vault to see it here.", results);
     };
     search.oninput = draw; draw();
-  }
-  private newNotebook() {
-    if (!this.allowNavigation()) return;
-    this.clearReader();
-    const wrap = el("section", "library-index", undefined, this.main);
-    el("h1", "", "A new notebook", wrap);
-    const input = el("input", "clear-search", undefined, wrap);
-    input.placeholder = "Notebook name"; input.setAttribute("aria-label", "Notebook name");
-    const actions = el("div", "library-tools", undefined, wrap);
-    const create = button(actions, "Create notebook", async () => {
-      create.disabled = true;
-      try {
-        const draft = notebookDraft(input.value, crypto.randomUUID());
-        if (!await this.host.saveNote(draft.path, null, draft.markdown)) throw Error("A notebook with this name already exists.");
-        const book = notebooks(this.host.index).find(b => b.index?.path === draft.path);
-        if (book) this.openBook(book); else this.navigate("Library");
-      } catch (e) { this.host.notice(String(e)); } finally { create.disabled = false; }
-    }, "clear-primary");
-    button(actions, "Cancel", () => this.navigate("Library")); input.focus();
   }
   private openBook(book: Notebook) {
     if (!this.allowNavigation()) return;
@@ -284,19 +260,6 @@ export class Workspace {
     forward.setAttribute("aria-label", "Next note");
     forward.disabled = this.historyIndex >= this.history.length - 1;
     const actions = el("div", "library-reader-actions", undefined, toolbar);
-    const pin = button(
-      actions,
-      this.host.state.pins.includes(path) ? "Unpin" : "Pin",
-      () => {
-        const s = this.host.state;
-        s.pins = s.pins.includes(path)
-          ? s.pins.filter((p) => p !== path)
-          : [...s.pins, path];
-        pin.textContent = s.pins.includes(path) ? "Unpin" : "Pin";
-        this.persist();
-      },
-    );
-    button(actions, "Recall", () => this.review(path));
     button(actions, "Edit", () => this.edit(n), "clear-primary");
     const scroll = el("div", "clear-reader-scroll", undefined, this.main);
     const article = el("article", "clear-article", undefined, scroll);
@@ -495,169 +458,6 @@ export class Workspace {
     input.setAttribute("aria-label", "Edit Markdown");
     input.spellcheck = true;
     input.focus();
-  }
-  private review(path?: string) {
-    if (!this.allowNavigation()) return;
-    this.page = "Review";
-    this.current = undefined;
-    this.clearReader();
-    this.root.dataset.screen = "reader";
-    const wrap = el("section", "clear-study", undefined, this.main);
-    button(
-      wrap,
-      "Back to library",
-      () => this.navigate("Library"),
-      "clear-text-button",
-    );
-    el(
-      "h1",
-      "clear-page-title",
-      path ? "Recall this topic" : "A little practice.",
-      wrap,
-    );
-    el(
-      "p",
-      "clear-subtitle",
-      "Try before you reveal. Explain it, sketch it, or work an example.",
-      wrap,
-    );
-    const all = this.host.state.prompts.filter(
-      (p) => !path || p.notePath === path,
-    );
-    const tags: string[] = [];
-    const prompts = eligiblePrompts(all).filter(
-      (p) =>
-        this.host.index.notes.has(p.notePath) &&
-        tags.every((t) =>
-          this.host.index.notes.get(p.notePath)?.tags.includes(t),
-        ),
-    );
-    const card = el("div", "clear-study-card", undefined, wrap);
-    let i = 0;
-    const show = () => {
-      card.replaceChildren();
-      const p = prompts[i];
-      if (!p) {
-        el(
-          "h2",
-          "",
-          prompts.length
-            ? "Practice complete."
-            : "Choose something worth remembering.",
-          card,
-        );
-        el(
-          "p",
-          "",
-          prompts.length
-            ? "Your assessment is saved. Come back when you want another attempt."
-            : "Add a focused question and answer, or ask your LLM to propose a few from your notes.",
-          card,
-        );
-        return;
-      }
-      el(
-        "p",
-        "clear-muted",
-        `${i + 1} of ${prompts.length} • ${this.host.index.notes.get(p.notePath)?.title}`,
-        card,
-      );
-      el("h2", "clear-question", p.question, card);
-      const attempt = field(
-        card,
-        "Your attempt (optional)",
-        "Explain from memory…",
-        true,
-      );
-      attempt.classList.add("clear-attempt");
-      button(
-        card,
-        "Reveal answer",
-        () => {
-          attempt.setAttribute("readonly", "true");
-          const answer = el("div", "clear-answer", p.answer, card);
-          answer.style.whiteSpace = "pre-wrap";
-          const ratings = el("div", "clear-rating", undefined, card);
-          for (const [grade, label] of [
-            ["again", "Try again"],
-            ["partial", "Partly remembered"],
-            ["remembered", "Remembered"],
-          ] as const)
-            button(ratings, label, () => {
-              p.assessment = grade;
-              p.reviewedAt = Date.now();
-              this.persist();
-              i++;
-              show();
-            });
-          reveal.remove();
-        },
-        "clear-primary",
-      ).id = "clear-reveal";
-      const reveal = card.querySelector("#clear-reveal")!;
-    };
-    show();
-    if (all.some((p) => !p.enrolled)) {
-      const pending = el("details", "clear-outline", undefined, wrap);
-      el("summary", "", "Suggested questions", pending);
-      for (const p of all.filter((p) => !p.enrolled)) {
-        el("p", "", p.question, pending);
-        if (p.evidence === "tentative")
-          el("p", "clear-muted", "Needs verification before practice", pending);
-        else
-          button(pending, "Include in practice", () => {
-            p.enrolled = true;
-            this.persist();
-            this.review(path);
-          });
-      }
-    }
-    el(
-      "p",
-      "clear-muted",
-      "This is unscheduled practice. The Library does not infer mastery or invent due dates. For scheduled cards, use Spaced Repetition in Obsidian.",
-      wrap,
-    );
-    const add = el("details", "clear-prompt-form", undefined, wrap);
-    el("summary", "", "Add a recall question", add);
-    const notes = [...this.host.index.notes.values()];
-    let target = path ?? notes[0]?.path ?? "";
-    select(
-      add,
-      "Note",
-      notes.map((n) => [n.path, n.title]),
-      target,
-      (v) => (target = v),
-    );
-    const q = field(add, "Question", "Why does…?"),
-      a = field(
-        add,
-        "Answer",
-        "A short explanation, with a source if needed.",
-        true,
-      );
-    button(
-      add,
-      "Add to practice",
-      () => {
-        if (!target || !q.value.trim() || !a.value.trim()) {
-          this.host.notice("Choose a note and fill in both fields.");
-          return;
-        }
-        this.host.state.prompts.push({
-          id: crypto.randomUUID(),
-          notePath: target,
-          question: q.value.trim(),
-          answer: a.value.trim(),
-          kind: "explain",
-          evidence: "user-statement",
-          enrolled: true,
-        });
-        this.persist();
-        this.review(path);
-      },
-      "clear-primary",
-    );
   }
   destroy() {
     this.destroyed = true;

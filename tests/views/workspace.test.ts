@@ -144,13 +144,14 @@ it('launches into a notebook shelf without capture or sidebars, then opens its i
  expect(root.querySelector('textarea')).toBeNull();
  ui.destroy();
 });
-it('keeps a note recall attempt when unrelated vault events refresh the view', async () => {
- const {root,ui,state} = setup();
- state.prompts.push({id:'p',notePath:'Learning.md',question:'Explain',answer:'Answer',kind:'explain',evidence:'source-backed',enrolled:true});
+it('exposes only navigation and editing, without notebook creation or study actions', async () => {
+ const {root,ui} = setup();
+ const names = () => [...root.querySelectorAll('button')].map(b => b.textContent);
+ expect(names()).not.toContain('New notebook');
+ expect(names()).not.toContain('Practice');
  await ui.openNote('Learning.md');
- [...root.querySelectorAll('button')].find(b => b.textContent==='Recall')!.click();
- const attempt = root.querySelector('textarea,input');
- ui.refresh();
- expect(root.querySelector('textarea,input')).toBe(attempt);
+ expect(names()).not.toContain('Recall');
+ expect(names()).not.toContain('Pin');
+ expect(names()).toContain('Edit');
  ui.destroy();
 });

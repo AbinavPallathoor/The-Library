@@ -25,7 +25,7 @@ it("real bundled stdio companion lists tools and calls its authenticated bridge"
         args: [path.resolve("dist/the-library-mcp.cjs"), config],
       }),
     );
-    expect((await client.listTools()).tools).toHaveLength(7);
+    expect((await client.listTools()).tools).toHaveLength(6);
     const result = await client.callTool({
       name: "get_workspace_policy",
       arguments: {},

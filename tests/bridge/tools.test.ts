@@ -4,7 +4,7 @@ import { startBridge } from "../../src/bridge/server";
 import { emptyState } from "../../src/domain/core";
 import { VaultIndex } from "../../src/index/vault-index";
 import { ChangeWriter } from "../../src/capture/change-writer";
-it("has exactly the seven promised tools, and read/propose never mutate", async () => {
+it("has exactly the six note-management tools, and read/propose never mutate", async () => {
   expect(Object.keys(schemas).sort()).toEqual(
     [
       "get_workspace_policy",
@@ -13,7 +13,6 @@ it("has exactly the seven promised tools, and read/propose never mutate", async 
       "propose_capture",
       "apply_changes",
       "get_receipt",
-      "get_review_context",
     ].sort(),
   );
   const state = emptyState(),

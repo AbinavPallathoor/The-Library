@@ -60,9 +60,8 @@ export default class ClearPlugin extends Plugin {
       name: "Refresh library",
       callback: () => void this.reconcile(),
     });
-    const updatePresentation = () => document.body.classList.toggle("library-focus", this.app.workspace.getActiveViewOfType(ClearView) !== null);
-    this.registerEvent(this.app.workspace.on("active-leaf-change", updatePresentation));
-    this.addCommand({id: "exit-library", name: "Return to Obsidian", callback: () => document.body.classList.remove("library-focus")});
+    document.body.classList.remove("library-focus");
+    document.body.classList.add("library-theme");
     this.addSettingTab(new ClearSettings(this.app, this));
     this.registerEvent(
       this.app.vault.on("modify", (f) => {
@@ -170,7 +169,7 @@ export default class ClearPlugin extends Plugin {
       await leaf.setViewState({ type: VIEW, active: true });
     }
     await this.app.workspace.revealLeaf(leaf);
-    document.body.classList.add("library-focus");
+
   }
   async saveNote(
     path: string,
@@ -209,7 +208,7 @@ export default class ClearPlugin extends Plugin {
   async startBridge() {
     if (Platform.isMobile)
       throw Error(
-        "The LLM bridge is desktop-only. Android supports notebooks, editing and recall.",
+        "The LLM bridge is desktop-only. Android supports notebooks and editing.",
       );
     if (this.bridge) return this.bridge.descriptorPath;
     const { startBridge } = await import("./bridge/server");
@@ -223,7 +222,7 @@ export default class ClearPlugin extends Plugin {
     this.bridge = undefined;
   }
   onunload() {
-    document.body.classList.remove("library-focus");
+    document.body.classList.remove("library-focus", "library-theme");
     this.stopped = true;
     void this.stopBridge();
   }
@@ -250,7 +249,6 @@ class ClearView extends ItemView {
     this.contentEl.empty();
     this.contentEl.addClass("clear-view");
     this.ui = new Workspace(this.contentEl, {
-      exit: () => document.body.classList.remove("library-focus"),
       state: p.state,
       index: p.index,
       persist: () => p.persist(),
@@ -365,7 +363,7 @@ class ClearSettings extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Export The Library registry")
       .setDesc(
-        "Pins, prompts, drafts and receipts. Markdown content stays in your vault.",
+        "Reading positions, drafts and receipts. Markdown content stays in your vault.",
       )
       .addButton((b) =>
         b.setButtonText("Export JSON").onClick(() => {

@@ -1,3 +1,13 @@
+# Current interface update
+
+Recall/Practice, Pin, and New notebook controls have been removed. The companion now exposes six note-management tools; legacy saved data is retained. Library opens on startup in Obsidian’s ordinary workspace, with native title bar, tabs and sidebars visible. A matching dark palette applies while the plugin is enabled.
+
+Verified the installed DigitalBrain view through native accessibility and a screenshot: traffic-light controls occupy the native title bar, with Library below it; removed actions are absent. Browser screenshots were regenerated at 1280, 800, 412 and 360px, with no page errors or horizontal overflow; Edit/Cancel works. 27 unit/integration tests plus four release tests pass. Physical Android remains unverified.
+
+The records below describe earlier iterations and are retained as history.
+
+---
+
 # The Library notebook release verification
 
 Date: 2026-10-14. Current checks: 27 unit/integration tests and four release tests passed, plus TypeScript, production builds and ZIP packaging. New regressions cover notebook index cross-links, missing links, additional-note discovery, safe creation paths, root-note ownership, absence of sidebars/Capture, and preserving recall attempts across vault refreshes.

@@ -21,12 +21,7 @@ export const schemas = {
     .object({ changeSetId: z.string().min(1), requestId: z.string().min(1) })
     .strict(),
   get_receipt: z.object({ requestId: z.string().min(1) }).strict(),
-  get_review_context: z
-    .object({
-      notePath: pathSchema.optional(),
-      includeAnswers: z.boolean().default(false),
-    })
-    .strict(),
+
 };
 export const descriptions = {
   get_workspace_policy:
@@ -40,8 +35,7 @@ export const descriptions = {
     "Apply a previously proposed change set with revision checks and an idempotent request ID. Writes Markdown.",
   get_receipt:
     "Recover a result by request ID after a lost response. No writes.",
-  get_review_context:
-    "Read recall prompts, with answers excluded unless explicitly requested. No writes.",
+
 };
 export class ToolHandlers {
   constructor(
@@ -65,8 +59,7 @@ export class ToolHandlers {
             "Only add #course/CODE when explicitly supplied for this capture. Never infer a code.",
           revision:
             "SHA-256 of exact Markdown. Null means create only if absent.",
-          recall:
-            "Tentative claims cannot be enrolled. Generation does not grade recall.",
+
           tools: Object.keys(schemas),
           captureSchema: z.toJSONSchema(draftSchema),
           folders: this.state.settings.folders,
@@ -109,14 +102,7 @@ export class ToolHandlers {
         return this.writer.getReceipt(
           schemas.get_receipt.parse(input).requestId,
         );
-      case "get_review_context": {
-        const a = schemas.get_review_context.parse(input);
-        return this.state.prompts
-          .filter((p) => !a.notePath || p.notePath === a.notePath)
-          .map((p) =>
-            a.includeAnswers ? p : (({ answer, ...rest }) => rest)(p),
-          );
-      }
+
     }
   }
 }
